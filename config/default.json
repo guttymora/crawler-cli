@@ -1,0 +1,8 @@
+{
+  "openai": {
+    "apiKey": "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"
+  },
+  "firecrawl": {
+    "apiKey": "fc-3b7a466a57944d5fa4cda23f51a679df"
+  }
+}
