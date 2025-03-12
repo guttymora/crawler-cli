@@ -3,62 +3,63 @@ import { writeFileSync } from 'node:fs';
 
 import { Commander } from '../lib/commander';
 import { scraper } from '../services/scraper';
-import { openAI } from '../services/openai';
+import { openAI } from '../services/openai/openai';
 
 type GenerateRequest = {
     name: string;
-    resourceName: string;
-    schedule: number;
+    resourceUrl: string;
 };
 
 type GeneratorState = {
     context: string[];
-    docsSchema: any;
-    code: string;
+    docsSchema?: any;
+    code?: string;
 };
 
-const logLoader = (message: string) => {
-    return ora(message).start();
+const logger = (message: string) => {
+    return ora({
+        discardStdin: false,
+        text: message,
+    }).start();
 };
 
-const createCodeFile = async (code: string) => {
-    writeFileSync('crawler.ts', code, { encoding: 'utf8' });
+const createCodeFile = async (data: { fileName: string; content: string }) => {
+    writeFileSync(`${data.fileName}.ts`, data.content, { encoding: 'utf8' });
 };
 
-const generate = async (request: GenerateRequest) => {
-    const { name, resourceName, schedule } = request;
+const generateCrawler = async (request: GenerateRequest) => {
+    const { name, resourceUrl } = request;
 
     const state: GeneratorState = {
         context: [],
-        docsSchema: {},
-        code: '',
+        docsSchema: undefined,
+        code: undefined,
     };
     const commander = new Commander();
 
     const getContext = async () => {
-        const log = logLoader('Generating API docs context');
-        const markdowns = await scraper.scrape(
-            'https://docs.github.com/en/rest/copilot?apiVersion=2022-11-28'
-        );
+        const log = logger('Generating API docs context');
+        const markdowns = await scraper.scrape(resourceUrl);
         state.context.push(...markdowns);
         log.stop();
     };
 
     const getResult = async () => {
-        const log = logLoader('Generating AI response');
-        const schema = await openAI.getEndpointsSchema(
+        const log = logger('Generating AI response');
+        state.docsSchema = await openAI.getEndpointsSchema(
             state.context.join('\n\n')
         );
-        state.docsSchema = schema;
         log.stop();
+        console.log('✔ AI response generated successfully');
     };
 
     const generateCode = async () => {
-        const log = logLoader('Generating code');
+        const log = logger('Generating code');
         const code = await openAI.getCode(JSON.stringify(state.docsSchema));
         if (!code) return;
         state.code = code;
         log.stop();
+        console.log('✔ Code generated successfully');
     };
 
     const writeCodeFile = async () => {
@@ -66,9 +67,13 @@ const generate = async (request: GenerateRequest) => {
             return console.error('Could not create code for this integration');
         }
 
-        const log = logLoader('Writing crawler code');
-        await createCodeFile(state.code);
+        const log = logger('Writing crawler code');
+        await createCodeFile({
+            fileName: name,
+            content: state.code,
+        });
         log.stop();
+        console.log('✔ Code written successfully');
     };
 
     await commander
@@ -78,7 +83,7 @@ const generate = async (request: GenerateRequest) => {
         .pipe(writeCodeFile)
         .exec();
 
-    console.log('>> ALL DONE!');
+    console.log('✔ All done!');
 };
 
-export { generate };
+export { generateCrawler };
