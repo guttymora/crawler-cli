@@ -5,15 +5,23 @@ import { Commander } from '../lib/commander';
 import { scraper } from '../services/scraper';
 import { openAI } from '../services/openai/openai';
 
+export type PermittedLanguages = 'typescript' | 'python';
+
 type GenerateRequest = {
     name: string;
     resourceUrl: string;
+    language: PermittedLanguages;
 };
 
 type GeneratorState = {
     context: string[];
     docsSchema?: any;
     code?: string;
+};
+
+const mapLangToFile = {
+    typescript: 'ts',
+    python: 'py',
 };
 
 const logger = (message: string) => {
@@ -23,12 +31,19 @@ const logger = (message: string) => {
     }).start();
 };
 
-const createCodeFile = async (data: { fileName: string; content: string }) => {
-    writeFileSync(`${data.fileName}.ts`, data.content, { encoding: 'utf8' });
+const createCodeFile = async (data: {
+    fileName: string;
+    content: string;
+    lang: PermittedLanguages;
+}) => {
+    const { fileName, content, lang } = data;
+    writeFileSync(`${fileName}.${mapLangToFile[lang]}`, content, {
+        encoding: 'utf8',
+    });
 };
 
 const generateCrawler = async (request: GenerateRequest) => {
-    const { name, resourceUrl } = request;
+    const { name, resourceUrl, language } = request;
 
     const state: GeneratorState = {
         context: [],
@@ -71,6 +86,7 @@ const generateCrawler = async (request: GenerateRequest) => {
         await createCodeFile({
             fileName: name,
             content: state.code,
+            lang: language,
         });
         log.stop();
         console.log('✔ Code written successfully');

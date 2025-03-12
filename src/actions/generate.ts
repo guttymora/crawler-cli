@@ -1,6 +1,6 @@
 import { input, select } from '@inquirer/prompts';
 
-import { generateCrawler } from '../generate/generate';
+import { generateCrawler, PermittedLanguages } from '../generate/generate';
 
 const generate = async () => {
     const name = await input({
@@ -10,6 +10,11 @@ const generate = async () => {
 
     const resourceUrl = await input({
         message: 'What resource url you want to consume, baby?',
+    });
+
+    const language: PermittedLanguages = await select({
+        message: 'Which language you want to write the code?',
+        choices: ['typescript', 'python'],
     });
 
     // let schedule: string = await select({
@@ -24,7 +29,7 @@ const generate = async () => {
     // const scheduleInMinutes = Number(schedule.replace(/\D/g, ''));
     // console.log(`Schedule: ${scheduleInMinutes} minutes`);
 
-    generateCrawler({ name, resourceUrl });
+    generateCrawler({ name, resourceUrl, language });
 };
 
 export { generate };
