@@ -16,8 +16,13 @@ const parseSchema = (data: string) => {
     return JSON.parse(jsonString);
 };
 
-const parseCode = (data: string) => {
-    const match = data.match(/```typescript([\s\S]*?)```/);
+const parseCode = (data: string, lang: PermittedLanguages) => {
+    const regex =
+        lang === PermittedLanguages.TYPESCRIPT
+            ? /```typescript([\s\S]*?)```/
+            : /```python([\s\S]*?)```/;
+
+    const match = data.match(regex);
     if (!match) return null;
 
     return match[1].trim();
@@ -46,7 +51,7 @@ const getCode = async (context: string, lang: PermittedLanguages) => {
     const { choices } = message;
     if (choices.length === 0 || !choices[0].message.content) return;
 
-    return parseCode(choices[0].message.content);
+    return parseCode(choices[0].message.content, lang);
 };
 
 export const openAI = {
