@@ -73,7 +73,10 @@ const generateCrawler = async (request: GenerateRequest) => {
 
     const generateCode = async () => {
         const log = logger('Generating code');
-        const code = await openAI.getCode(JSON.stringify(state.docsSchema));
+        const code = await openAI.getCode(
+            JSON.stringify(state.docsSchema),
+            language
+        );
         if (!code) return;
         state.code = code;
         log.stop();

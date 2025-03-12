@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import config from 'config';
 import { prompts } from './prompts';
+import { PermittedLanguages } from '../../generate/generate';
 
 const client = new OpenAI({
     apiKey: config.get<string>('openai.apiKey'),
@@ -34,9 +35,11 @@ const getEndpointsSchema = async (context: string) => {
     return parseSchema(choices[0].message.content);
 };
 
-const getCode = async (context: string) => {
+const getCode = async (context: string, lang: PermittedLanguages) => {
     const message = await client.chat.completions.create({
-        messages: [{ role: 'user', content: prompts.getCodePrompt(context) }],
+        messages: [
+            { role: 'user', content: prompts.getCodePrompt(context, lang) },
+        ],
         model: 'gpt-4o',
     });
 

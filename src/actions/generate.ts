@@ -14,7 +14,7 @@ const generate = async () => {
 
     const language: PermittedLanguages = await select({
         message: 'Which language you want to write the code?',
-        choices: [PermittedLanguages.TYPESCRIPT, PermittedLanguages.TYPESCRIPT],
+        choices: [PermittedLanguages.TYPESCRIPT, PermittedLanguages.PYTHON],
     });
 
     // let schedule: string = await select({

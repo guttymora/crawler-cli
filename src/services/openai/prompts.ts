@@ -1,3 +1,5 @@
+import { PermittedLanguages } from '../../generate/generate';
+
 const getSchemaPrompt = (context: string): string => `
 You are an experienced software engineer with a huge background on API development and TDD 
 (Technical Development Document) generation and you were provided with this context:
@@ -16,8 +18,8 @@ page-based pagination, cursor-based pagination or so
 Don't hallucinate and your response should be only in a json format. Avoid comments and side notes.
 `;
 
-const getCodePrompt = (context: string): string => `
-You are an experienced software engineer with a huge background on API development, Node.JS with Typescript
+const getCodePrompt = (context: string, lang: PermittedLanguages): string => `
+You are an experienced software engineer with a huge background on API development in ${lang}
 and amazing skills in business analytics with previous experience manipulating data and generating metrics 
 who currently works in the SaaS Integration team at Datadog and you have been provided with the following context:
 
@@ -46,14 +48,14 @@ the timestamp is NOT a tag.
 response of each iteration for paginated requests or if the volume of data is huge.
 - The code should have a final part at the end to be executable running the file isolated
 
-It's important to define all the interfaces and types because you're working with Typescript and we all want (you included)
+It's important to define all the interfaces and types because you're working with ${lang} and we all want (you included)
 our code strictly typed to keep safeness and consistency. You need to keep special attention on how's the endpoints
 return their responses, if the fields are in snake case, camel case or pascal case in order to generate proper types and being
 able to map the objects according to this.
 Also, each variable that the user should replace or input keep them separated to easily access them and replace them
 with the real value such as query params, path params, secrets, tokens and so on.
 
-Don't hallucinate and only reply with your typescript code. Avoid comments and side notes.
+Don't hallucinate and only reply with your ${lang} code. Avoid comments and side notes.
 `;
 
 export const prompts = {
