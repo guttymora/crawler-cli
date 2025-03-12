@@ -5,7 +5,10 @@ import { Commander } from '../lib/commander';
 import { scraper } from '../services/scraper';
 import { openAI } from '../services/openai/openai';
 
-export type PermittedLanguages = 'typescript' | 'python';
+export enum PermittedLanguages {
+    TYPESCRIPT = 'typescript',
+    PYTHON = 'python',
+}
 
 type GenerateRequest = {
     name: string;
@@ -20,8 +23,8 @@ type GeneratorState = {
 };
 
 const mapLangToFile = {
-    typescript: 'ts',
-    python: 'py',
+    [PermittedLanguages.TYPESCRIPT]: 'ts',
+    [PermittedLanguages.PYTHON]: 'py',
 };
 
 const logger = (message: string) => {
