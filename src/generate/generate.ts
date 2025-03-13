@@ -40,7 +40,7 @@ const createCodeFile = async (data: {
     lang: PermittedLanguages;
 }) => {
     const { fileName, content, lang } = data;
-    writeFileSync(`results/${fileName}.${mapLangToFile[lang]}`, content, {
+    writeFileSync(`${fileName}.${mapLangToFile[lang]}`, content, {
         encoding: 'utf8',
     });
 };
@@ -105,9 +105,7 @@ const generateCrawler = async (request: GenerateRequest) => {
         .pipe(writeCodeFile)
         .exec();
 
-    console.log(
-        '✔ All done! You could find your generated code in the "results" folder'
-    );
+    console.log('✔ All done!');
 };
 
 export { generateCrawler };
