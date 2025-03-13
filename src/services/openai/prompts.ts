@@ -29,13 +29,16 @@ Having the above endpoint schema specification list, write me the method (or met
 endpoints (mocking all the possible variables) using 'axios' library and handle the response of each endpoint to 
 map the result into metrics following these requirements:
 - It's mandatory to understand the response schema to understand how to iterate over the multiple fields, nested objects
-and rest of elements inside each endpoint response.
+and rest of elements inside each endpoint response. Make sure you're handling an array or a nested object or other type
+before map the response into metrics.
+- Understand the naming convention of the response schema to generate the proper types/interfaces in the code.
 - Understand which endpoints are deprecated or not in order to know which to use.
 - Extract all the possible values that can be treated as metrics. Be exhaustive and Iterate over deeper metrics. 
 Remember we need as much data as possible. Remember that the value of a metric is a number always.
-- Each metric has its own name and should be enough mnemonic to relate each value to a human reasoning name. If you deduce
-a metric should have nesting levels, the convention of nesting is by dots. You should use the pattern: level1.level2.level3 
-and so on.
+- Each metric has its own name and should be enough mnemonic to relate each value to a human reasoning name. The name 
+is always in snake_case and if you deduce a metric should have nesting levels, the convention of nesting is by dots. 
+You should use the pattern: first_level.second_level.third_level. It's up to you to know how many levels could have a
+metric name. We recommend to have between 1 and 3.
 - Each metric has its type which defines how the metric behaves. The all possible metric types are:
 Set, Gauge, Counter, Distribution, Histogram. You have to set a type to each metric and these types should be an enum.
 - Also, each metric has a timestamp. This timestamp value should be extract from the response and, in case it does not
@@ -49,11 +52,11 @@ response of each iteration for paginated requests or if the volume of data is hu
 - The code should have a final part at the end to be executable running the file isolated
 
 It's important to define all the interfaces and types because you're working with ${lang} and we all want (you included)
-our code strictly typed to keep safeness and consistency. You need to keep special attention on how's the endpoints
-return their responses, if the fields are in snake case, camel case or pascal case in order to generate proper types and being
-able to map the objects according to this.
+to have our code strictly typed to keep safeness and consistency.
+
 Also, each variable that the user should replace or input keep them separated to easily access them and replace them
-with the real value such as query params, path params, secrets, tokens and so on.
+with the real value such as query params, path params, secrets, tokens and so on. Put all the variables on top of the
+code and in uppercase.
 
 Don't hallucinate and only reply with your ${lang} code. Avoid comments and side notes.
 `;
