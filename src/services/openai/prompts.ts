@@ -18,7 +18,7 @@ page-based pagination, cursor-based pagination or so
 Don't hallucinate and your response should be only in a json format. Avoid comments and side notes.
 `;
 
-const getCodePrompt = (context: string, lang: PermittedLanguages): string => `
+const getCodePrompt = (context: string, crawlerContext: string, lang: PermittedLanguages): string => `
 You are an experienced software engineer with a huge background on API development in ${lang}
 and amazing skills in business analytics with previous experience manipulating data and generating metrics 
 who currently works in the SaaS Integration team at Datadog and you have been provided with the following context:
@@ -51,6 +51,10 @@ the timestamp is NOT a tag.
 response of each iteration for paginated requests or if the volume of data is huge.
 - The code should have a final part at the end to be executable running the file isolated
 
+As a reference on how to implement the code, you can take a look at the following example:
+
+${crawlerContext}
+
 It's important to define all the interfaces and types because you're working with ${lang} and we all want (you included)
 to have our code strictly typed to keep safeness and consistency.
 
@@ -58,10 +62,45 @@ Also, each variable that the user should replace or input keep them separated to
 with the real value such as query params, path params, secrets, tokens and so on. Put all the variables on top of the
 code and in uppercase.
 
-Don't hallucinate and only reply with your ${lang} code. Avoid comments and side notes.
+Don't hallucinate and only reply with your ${lang} code. Avoid comments and side notes, and make sure the code:
+ - is executable
+ - can be easily tested
+ - have defined interfaces and types
+ - follows code best practices
+ - avoids lines of code longer than 80 characters
+`;
+
+const getTestAndImproveCodePrompt = (schemaContext: string, codeContext: string, lang: PermittedLanguages): string => `
+You are an experienced software engineer with a huge background on API development in ${lang}
+and amazing skills in business analytics with previous experience manipulating data and generating metrics.
+
+Your job is to validate a code produced by another agent that aims to crawl an API and extract metrics from it.
+
+You can see the API schema here:
+
+${schemaContext}
+
+And the code produced by the other agent here:
+
+${codeContext}
+
+With the API schema and the code, you should validate the code and improve it if needed. Once you have the improved code, you should return the improved code, 
+along side with a set of tests cases that asserts the code is working as expected. You should also provide well defined fixtures
+that demonstrate the API response and the expected metrics extracted from the API response. Those fixtures should be used by the test cases
+to assert the code is working as expected.
+
+When improving the code, you should:
+- Make sure the code is executable
+- Make sure the code has defined interfaces and types
+- Make sure the code follows code best practices
+- Make sure the code avoids lines of code longer than 80 characters
+- Make sure the code complies with the API schema
+
+Don't hallucinate and only reply with your ${lang} code. Avoid comments and side notes
 `;
 
 export const prompts = {
     getSchemaPrompt,
     getCodePrompt,
+    getTestAndImproveCodePrompt,
 };

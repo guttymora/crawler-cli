@@ -16,6 +16,7 @@ const parseSchema = (data: string) => {
     return JSON.parse(jsonString);
 };
 
+
 const parseCode = (data: string, lang: PermittedLanguages) => {
     const regex =
         lang === PermittedLanguages.TYPESCRIPT
@@ -40,11 +41,23 @@ const getEndpointsSchema = async (context: string) => {
     return parseSchema(choices[0].message.content);
 };
 
-const getCode = async (context: string, lang: PermittedLanguages) => {
+const getCode = async (context: string, crawlerContext: string, lang: PermittedLanguages) => {
     const message = await client.chat.completions.create({
         messages: [
-            { role: 'user', content: prompts.getCodePrompt(context, lang) },
+            { role: 'user', content: prompts.getCodePrompt(context, crawlerContext, lang) },
         ],
+        model: 'gpt-4o',
+    });
+
+    const { choices } = message;
+    if (choices.length === 0 || !choices[0].message.content) return;
+
+    return parseCode(choices[0].message.content, lang);
+};
+
+const testAndImproveCode = async (schemaContext: string, codeContext: string, lang: PermittedLanguages) => {
+    const message = await client.chat.completions.create({
+        messages: [{ role: 'user', content: prompts.getTestAndImproveCodePrompt(schemaContext, codeContext, lang) }],
         model: 'gpt-4o',
     });
 
@@ -57,4 +70,5 @@ const getCode = async (context: string, lang: PermittedLanguages) => {
 export const openAI = {
     getEndpointsSchema,
     getCode,
+    testAndImproveCode,
 };

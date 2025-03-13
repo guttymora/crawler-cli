@@ -9,7 +9,7 @@ const generate = async () => {
     console.log('Crawler name:', name);
 
     const resourceUrl = await input({
-        message: 'What resource url you want to consume, baby?',
+        message: 'What resource url you want to consume?',
     });
 
     const language: PermittedLanguages = await select({
@@ -18,6 +18,10 @@ const generate = async () => {
             { name: 'TypeScript', value: PermittedLanguages.TYPESCRIPT },
             { name: 'Python', value: PermittedLanguages.PYTHON }
           ],
+    });
+
+    const crawlerPath = await input({
+        message: 'What is the path to the crawler?',
     });
 
     // let schedule: string = await select({
@@ -32,7 +36,7 @@ const generate = async () => {
     // const scheduleInMinutes = Number(schedule.replace(/\D/g, ''));
     // console.log(`Schedule: ${scheduleInMinutes} minutes`);
 
-    generateCrawler({ name, resourceUrl, language });
+    generateCrawler({ name, resourceUrl, crawlerPath, language });
 };
 
 export { generate };
