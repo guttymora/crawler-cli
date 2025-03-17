@@ -33,6 +33,7 @@ const getEndpointsSchema = async (context: string) => {
     const message = await client.chat.completions.create({
         messages: [{ role: 'user', content: prompts.getSchemaPrompt(context) }],
         model: 'gpt-4o',
+        temperature: 0, // help reduce randomness between runs
     });
 
     const { choices } = message;
@@ -41,12 +42,26 @@ const getEndpointsSchema = async (context: string) => {
     return parseSchema(choices[0].message.content);
 };
 
+const getCrawlerTemplate = async (context: string, lang: PermittedLanguages) => {
+    const message = await client.chat.completions.create({
+        messages: [{ role: 'user', content: prompts.getCrawlerCodePrompt(context, lang) }],
+        model: 'gpt-4o',
+        temperature: 0, // help reduce randomness between runs
+    });
+
+    const { choices } = message;
+    if (choices.length === 0 || !choices[0].message.content) return;
+
+    return choices[0].message.content;
+};
+
 const getCode = async (context: string, crawlerContext: string, lang: PermittedLanguages) => {
     const message = await client.chat.completions.create({
         messages: [
             { role: 'user', content: prompts.getCodePrompt(context, crawlerContext, lang) },
         ],
         model: 'gpt-4o',
+        temperature: 0, // help reduce randomness between runs
     });
 
     const { choices } = message;
@@ -59,6 +74,7 @@ const testAndImproveCode = async (schemaContext: string, codeContext: string, la
     const message = await client.chat.completions.create({
         messages: [{ role: 'user', content: prompts.getTestAndImproveCodePrompt(schemaContext, codeContext, lang) }],
         model: 'gpt-4o',
+        // temperature: 0, // help reduce randomness between runs 
     });
 
     const { choices } = message;
@@ -69,6 +85,7 @@ const testAndImproveCode = async (schemaContext: string, codeContext: string, la
 
 export const openAI = {
     getEndpointsSchema,
+    getCrawlerTemplate,
     getCode,
     testAndImproveCode,
 };

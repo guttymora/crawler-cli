@@ -4,7 +4,7 @@ import { writeFileSync } from 'node:fs';
 import { Commander } from '../lib/commander';
 import { scraper } from '../services/scraper';
 import { openAI } from '../services/openai/openai';
-import { buildPythonContextMarkdown } from '../services/crawler-context-scraper';
+import { readFilesContent } from '../services/read-files';
 
 export enum PermittedLanguages {
     TYPESCRIPT = 'typescript',
@@ -22,6 +22,7 @@ type GeneratorState = {
     context: string[];
     crawlerContext: string[];
     docsSchema?: any;
+    crawlerTemplate?: any;
     code?: string;
     improvedCode?: string;
 };
@@ -56,43 +57,88 @@ const generateCrawler = async (request: GenerateRequest) => {
         context: [],
         crawlerContext: [],
         docsSchema: undefined,
+        crawlerTemplate: undefined,
         code: undefined,
         improvedCode: undefined,
     };
     const commander = new Commander();
 
-    const getContext = async () => {
-        const log = logger('Generating API docs context');
+    const readSchemaFromDocs = async () => {
+        const log = logger('Scraping API docs');
+        const markdowns = await readFilesContent(resourceUrl);
+        state.context.push(...markdowns);
+        log.stop();
+    };
+
+    const scrapeSchemaFromDocs = async () => {
+        const log = logger('Reading scraped API docs');
         const markdowns = await scraper.scrape(resourceUrl);
         state.context.push(...markdowns);
         log.stop();
     };
 
-    const getPythonContext = async () => {
-        const log = logger('Generating Python context');
-        const markdown = await buildPythonContextMarkdown(crawlerPath);
-        state.crawlerContext.push(markdown);
+    const readCrawlerFromDocs = async () => {
+        const log = logger('Reading context from crawler example code');
+        const markdowns = await readFilesContent(crawlerPath);
+        state.crawlerContext.push(...markdowns);
         log.stop();
     };
 
-    const getResult = async () => {
-        const log = logger('Generating AI response');
+    const generateSchema = async () => {
+        const log = logger('Generating schema from scrapped docs');
         state.docsSchema = await openAI.getEndpointsSchema(
             state.context.join('\n\n')
         );
+
+        if (state.docsSchema) {
+            await createCodeFile({
+                fileName: `${name}-schema`,
+                content: JSON.stringify(state.docsSchema),
+                lang: language,
+            });
+        }
         log.stop();
         console.log('✔ AI response generated successfully');
+    };
+
+    const generateCrawlerTemplate = async () => {
+        const log = logger('Generating crawler template from scrapped docs');
+        state.crawlerTemplate = await openAI.getCrawlerTemplate(
+            state.crawlerContext.join('\n\n'),
+            language
+        );
+
+        if (state.crawlerTemplate) {
+            await createCodeFile({
+                fileName: `${name}-crawler-template`,
+                content: state.crawlerTemplate,
+                lang: language,
+            });
+        } else {
+            log.fail('Could not generate crawler template');
+        }
+        log.stop();
+        console.log('✔ Crawler template generated successfully');
     };
 
     const generateCode = async () => {
         const log = logger('Generating code');
         const code = await openAI.getCode(
             JSON.stringify(state.docsSchema),
-            state.crawlerContext.join('\n\n'),
+            state.crawlerTemplate,
             language
         );
-        if (!code) return;
+        if (!code) {
+            return console.error('Could not create code for this integration');
+        }
         state.code = code;
+
+        await createCodeFile({
+            fileName: `${name}-crawler`,
+            content: state.code,
+            lang: language,
+        });
+
         log.stop();
         console.log('✔ Code generated successfully');
     };
@@ -108,45 +154,30 @@ const generateCrawler = async (request: GenerateRequest) => {
             state.code,
             language
         );
-        if (!code) return;
-        state.improvedCode = code;
-        log.stop();
-        console.log('✔ Code tested and improved successfully');
-    };
-
-    const writeCodeFile = async () => {
-        if (!state.code) {
-            return console.error('Could not create code for this integration');
-        }
-
-        const log = logger('Writing crawler code');
-        await createCodeFile({
-            fileName: name,
-            content: state.code,
-            lang: language,
-        });
-
-        if (!state.improvedCode) {
+        
+        if (!code) {
             return console.error('Could not create improved code for this integration');
         }
 
+        state.improvedCode = code;
+
         await createCodeFile({
-            fileName: `${name}-improved`,
+            fileName: `${name}-improved-crawler`,
             content: state.improvedCode,
             lang: language,
         });
 
         log.stop();
-        console.log('✔ Code written successfully');
+        console.log('✔ Code tested and improved successfully');
     };
 
     await commander
-        .pipe(getContext)
-        .pipe(getPythonContext)
-        .pipe(getResult)
+        .pipe(readSchemaFromDocs)
+        .pipe(readCrawlerFromDocs)
+        .pipe(generateSchema)
+        .pipe(generateCrawlerTemplate)
         .pipe(generateCode)
         .pipe(testAndImproveCode)
-        .pipe(writeCodeFile)
         .exec();
 
     console.log('✔ All done!');

@@ -12,6 +12,7 @@ const generate = async () => {
         message: 'What resource url you want to consume?',
     });
 
+
     const language: PermittedLanguages = await select({
         message: 'Which language you want to write the code?',
         choices: [
@@ -26,7 +27,12 @@ const generate = async () => {
 
     // let schedule: string = await select({
     //     message: 'How often is the crawler executed?',
-    //     choices: ['5 min', '10 min', '15 min', 'Custom'],
+    //     choices: [
+    //         { name: '5 min', value: '5' },
+    //         { name: '10 min', value: '10' },
+    //         { name: '15 min', value: '15' },
+    //         { name: 'Custom', value: 'custom' },
+    //     ],
     // });
     // if (schedule === 'Custom') {
     //     schedule = await input({
@@ -35,6 +41,10 @@ const generate = async () => {
     // }
     // const scheduleInMinutes = Number(schedule.replace(/\D/g, ''));
     // console.log(`Schedule: ${scheduleInMinutes} minutes`);
+
+    // const resourceUrl = 'api_docs/';
+    // const language: PermittedLanguages = PermittedLanguages.PYTHON
+    // const crawlerPath = '/Users/cristian.rossi/dd/crawler-sdk/';
 
     generateCrawler({ name, resourceUrl, crawlerPath, language });
 };

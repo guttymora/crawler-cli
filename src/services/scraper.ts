@@ -21,4 +21,3 @@ const scrape = async (url: string): Promise<string[]> => {
 };
 
 export const scraper = { scrape };
-// scrape('https://docs.github.com/en/rest/copilot?apiVersion=2022-11-28');
